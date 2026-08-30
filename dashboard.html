@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaduFLIX</title>
+    <link rel="shortcut icon" href="#">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Script de autenticação e proteção de rota -->
+    <script src="auth-guard.js"></script>
+    
+    <style>
+        :root {
+            --bg-primary: #0b0c0e;
+            --bg-secondary: #141519;
+            --card-bg: #1c1d22;
+            --border-color: #2a2b30;
+            --primary: #E50914;
+            --text-main: #ffffff;
+            --text-muted: #9aa0a6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+        body { background-color: var(--bg-primary); color: var(--text-main); min-height: 100vh; }
+
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .brand-title { color: var(--primary); font-size: 1.8rem; font-weight: 800; }
+        .nav-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .user-info { font-size: 0.85rem; color: var(--text-muted); margin-right: 8px; }
+
+        .btn-tab {
+            padding: 10px 18px; border-radius: 20px; background: transparent;
+            border: 1px solid var(--border-color); color: #fff; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-tab.active { background: var(--primary); border-color: var(--primary); }
+
+        .btn { padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; color: #fff; }
+        .btn-green { background: #28a745; }
+        .btn-logout { background: #333; }
+
+        .container { padding: 32px; }
+
+        .categories-bar {
+            display: flex; gap: 15px; margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 12px; overflow-x: auto;
+        }
+
+        .cat-item { color: var(--text-muted); cursor: pointer; font-size: 0.95rem; font-weight: 600; white-space: nowrap; }
+        .cat-item:hover, .cat-item.active { color: #fff; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+
+        .grid-cards {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px;
+        }
+
+        .item-card {
+            background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);
+            overflow: hidden; cursor: pointer; transition: transform 0.2s, border-color 0.2s;
+            display: flex; flex-direction: column; justify-content: space-between; position: relative;
+        }
+        .item-card:hover { transform: translateY(-4px); border-color: var(--primary); }
+        
+        .item-card img { width: 100%; height: 230px; object-fit: cover; background: #101114; }
+        
+        .item-info { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+        .item-title { font-weight: 700; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-type { color: var(--primary); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+
+        /* MODAIS */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); display: none;
+            align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 24px; width: 100%; max-width: 400px;
+        }
+        .modal-card input, .modal-card select {
+            width: 100%; padding: 12px; margin-bottom: 12px;
+            background: #000; border: 1px solid var(--border-color);
+            color: #fff; border-radius: 6px; outline: none;
+        }
+
+        /* MODAL DO PLAYER DE VÍDEO */
+        .player-modal {
+            background: #000; border: 1px solid var(--border-color);
+            border-radius: 12px; width: 90%; max-width: 900px; overflow: hidden;
+        }
+        .player-header {
+            padding: 16px; background: var(--bg-secondary);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .video-container { width: 100%; aspect-ratio: 16/9; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-title">KADUFLIX</div>
+        <div class="nav-actions">
+            <span class="user-info">Olá, <strong id="sessionUserName">...</strong> (<span id="sessionRole">...</span>)</span>
+            <button class="btn-tab active" onclick="switchMainTab('canais')">📺 Canais Ao Vivo</button>
+            <button class="btn-tab" onclick="switchMainTab('filmes')">🎬 Filmes</button>
+            <button class="btn-tab" onclick="switchMainTab('animes')">🐉 Animes</button>
+            <button id="btnNovoUsuario" class="btn btn-green" style="display: none;" onclick="openCreateUserModal()">+ Novo Usuário</button>
+            <button class="btn btn-logout" onclick="logout()">Sair</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="categories-bar" id="subCategoryBar"></div>
+        <div class="grid-cards" id="contentGrid"></div>
+    </div>
+
+    <!-- MODAL DO PLAYER -->
+    <div class="modal-overlay" id="playerModal">
+        <div class="player-modal">
+            <div class="player-header">
+                <h3 id="playerTitle">Reproduzindo...</h3>
+                <button class="btn btn-logout" onclick="closePlayerModal()">Fechar X</button>
+            </div>
+            <div class="video-container" id="playerContainer"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CRIAR USUÁRIO (ADMIN) -->
+    <div class="modal-overlay" id="createUserModal">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 16px;">Cadastrar Novo Usuário</h3>
+            <form id="createUserForm">
+                <input type="text" id="newUsername" placeholder="Nome de Usuário" required>
+                <input type="password" id="newPassword" placeholder="Senha" required>
+                <select id="newRole">
+                    <option value="user">Usuário Comum</option>
+                    <option value="admin">Administrador</option>
+                </select>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit" class="btn btn-green" id="btnSaveUser" style="flex:1;">Cadastrar</button>
+                    <button type="button" class="btn btn-logout" onclick="closeCreateUserModal()" style="flex:1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'canais';
+
+        // BASE DE DADOS COMPLETA COM TODOS OS ITENS FORNECIDOS
+        const catalog = {
+            canais: [
+                // ESPORTE
+                { name: "Band Sports", cat: "Esporte", url: "https://v1.rdse.lat/bandsports", icon: "https://img.icons8.com/color/100/sports.png" },
+                { name: "Combate", cat: "Esporte", url: "https://v1.rdse.lat/combate", icon: "https://img.icons8.com/color/100/boxing.png" },
+                { name: "Dazn", cat: "Esporte", url: "https://v1.rdse.lat/dazn", icon: "https://img.icons8.com/color/100/stadium.png" },
+                { name: "Dazn 1", cat: "Esporte", url: "https://v1.rdse.lat/dazn2", icon: "https://img.icons8.com/color/100/stadium.png" },
+                { name: "Dazn 2", cat: "Esporte", url: "https://v1.rdse.lat/dazn3", icon: "https://img.icons8.com/color/100/stadium.png" },
+                { name: "Dazn 3", cat: "Esporte", url: "https://v1.rdse.lat/dazn4", icon: "https://img.icons8.com/color/100/stadium.png" },
+                { name: "Dazn 4", cat: "Esporte", url: "https://v1.rdse.lat/dazn5", icon: "https://img.icons8.com/color/100/stadium.png" },
+                { name: "Discover Turbo", cat: "Esporte", url: "https://v1.rdse.lat/discoveryturbo", icon: "https://img.icons8.com/color/100/car.png" },
+                { name: "ESPN", cat: "Esporte", url: "https://v1.rdse.lat/espn", icon: "https://img.icons8.com/color/100/espn.png" },
+                { name: "ESPN 2", cat: "Esporte", url: "https://v1.rdse.lat/espn2", icon: "https://img.icons8.com/color/100/espn.png" },
+                { name: "ESPN 3", cat: "Esporte", url: "https://v1.rdse.lat/espn3", icon: "https://img.icons8.com/color/100/espn.png" },
+                { name: "ESPN 4", cat: "Esporte", url: "https://v1.rdse.lat/espn4", icon: "https://img.icons8.com/color/100/espn.png" },
+                { name: "ESPN 5", cat: "Esporte", url: "https://v1.rdse.lat/espn5", icon: "https://img.icons8.com/color/100/espn.png" },
+                { name: "ESPN 6", cat: "Esporte", url: "https://v1.rdse.lat/espn6", icon: "https://img.icons8.com/color/100/espn.png" },
+                { name: "SportTV", cat: "Esporte", url: "https://v1.rdse.lat/sportv", icon: "https://img.icons8.com/color/100/football.png" },
+                { name: "SportTV 2", cat: "Esporte", url: "https://v1.rdse.lat/sportv2", icon: "https://img.icons8.com/color/100/football.png" },
+                { name: "SportTV 3", cat: "Esporte", url: "https://v1.rdse.lat/sportv3", icon: "https://img.icons8.com/color/100/football.png" },
+                { name: "SportTV 4", cat: "Esporte", url: "https://v1.rdse.lat/sportv4", icon: "https://img.icons8.com/color/100/football.png" },
+
+                // FILMES / CANAIS
+                { name: "Adult Swim", cat: "Filmes", url: "https://v1.rdse.lat/adultswim", icon: "https://img.icons8.com/color/100/tv.png" },
+                { name: "Cinemax", cat: "Filmes", url: "https://v1.rdse.lat/cinemax", icon: "https://img.icons8.com/color/100/clapperboard.png" },
+                { name: "HBO", cat: "Filmes", url: "https://v1.rdse.lat/hbo", icon: "https://img.icons8.com/color/100/hbo.png" },
+                { name: "HBO 2", cat: "Filmes", url: "https://v1.rdse.lat/hbo2", icon: "https://img.icons8.com/color/100/hbo.png" },
+                { name: "HBO Family", cat: "Filmes", url: "https://v1.rdse.lat/hbofamily", icon: "https://img.icons8.com/color/100/hbo.png" },
+                { name: "HBO Mundi", cat: "Filmes", url: "https://v1.rdse.lat/hbomundi", icon: "https://img.icons8.com/color/100/hbo.png" },
+                { name: "HBO Plus", cat: "Filmes", url: "https://v1.rdse.lat/hboplus", icon: "https://img.icons8.com/color/100/hbo.png" },
+                { name: "HBO Pop", cat: "Filmes", url: "https://v1.rdse.lat/hbopop", icon: "https://img.icons8.com/color/100/hbo.png" },
+                { name: "HBO Signature", cat: "Filmes", url: "https://v1.rdse.lat/hbosignature", icon: "https://img.icons8.com/color/100/hbo.png" },
+                { name: "HBO Extreme", cat: "Filmes", url: "https://v1.rdse.lat/hboxtreme", icon: "https://img.icons8.com/color/100/hbo.png" },
+                { name: "History", cat: "Filmes", url: "https://v1.rdse.lat/history", icon: "https://img.icons8.com/color/100/museum.png" },
+                { name: "History 2", cat: "Filmes", url: "https://v1.rdse.lat/history2", icon: "https://img.icons8.com/color/100/museum.png" },
+                { name: "Max", cat: "Filmes", url: "https://v1.rdse.lat/max1", icon: "https://img.icons8.com/color/100/movie-projector.png" },
+                { name: "Max 2", cat: "Filmes", url: "https://v1.rdse.lat/max2", icon: "https://img.icons8.com/color/100/movie-projector.png" },
+                { name: "Max 3", cat: "Filmes", url: "https://v1.rdse.lat/max3", icon: "https://img.icons8.com/color/100/movie-projector.png" },
+                { name: "MegaPix", cat: "Filmes", url: "https://v1.rdse.lat/megapix", icon: "https://img.icons8.com/color/100/film-reel.png" },
+                { name: "Paramount+", cat: "Filmes", url: "https://v1.rdse.lat/paramount", icon: "https://img.icons8.com/color/100/cinema-film.png" },
+                { name: "Paramount+ 2", cat: "Filmes", url: "https://v1.rdse.lat/paramount2", icon: "https://img.icons8.com/color/100/cinema-film.png" },
+                { name: "Paramount+ 3", cat: "Filmes", url: "https://v1.rdse.lat/paramount3", icon: "https://img.icons8.com/color/100/cinema-film.png" },
+                { name: "Paramount+ 4", cat: "Filmes", url: "https://v1.rdse.lat/paramount4", icon: "https://img.icons8.com/color/100/cinema-film.png" },
+                { name: "Series Classic", cat: "Filmes", url: "https://v1.rdse.lat/seriesclassic", icon: "https://img.icons8.com/color/100/retro-tv.png" },
+                { name: "Sony", cat: "Filmes", url: "https://v1.rdse.lat/sony", icon: "https://img.icons8.com/color/100/display.png" },
+                { name: "Sony Movies", cat: "Filmes", url: "https://v1.rdse.lat/sonymovies", icon: "https://img.icons8.com/color/100/display.png" },
+                { name: "Space", cat: "Filmes", url: "https://v1.rdse.lat/space", icon: "https://img.icons8.com/color/100/galaxy.png" },
+                { name: "Studio Universal", cat: "Filmes", url: "https://v1.rdse.lat/studiouniversal", icon: "https://img.icons8.com/color/100/video-camera.png" },
+                { name: "TCM", cat: "Filmes", url: "https://v1.rdse.lat/tcm", icon: "https://img.icons8.com/color/100/popcorn.png" },
+                { name: "Telecine Action", cat: "Filmes", url: "https://v1.rdse.lat/telecineaction", icon: "https://img.icons8.com/color/100/clapperboard.png" },
+                { name: "Telecine Cult", cat: "Filmes", url: "https://v1.rdse.lat/telecinecult", icon: "https://img.icons8.com/color/100/clapperboard.png" },
+                { name: "Telecine Fun", cat: "Filmes", url: "https://v1.rdse.lat/telecinefun", icon: "https://img.icons8.com/color/100/clapperboard.png" },
+                { name: "Telecine Pipoca", cat: "Filmes", url: "https://v1.rdse.lat/telecinepipoca", icon: "https://img.icons8.com/color/100/popcorn.png" },
+                { name: "Telecine Premium", cat: "Filmes", url: "https://v1.rdse.lat/telecinepremium", icon: "https://img.icons8.com/color/100/clapperboard.png" },
+                { name: "Telecine Touch", cat: "Filmes", url: "https://v1.rdse.lat/telecinetouch", icon: "https://img.icons8.com/color/100/clapperboard.png" },
+                { name: "TNT", cat: "Filmes", url: "https://v1.rdse.lat/tnt", icon: "https://img.icons8.com/color/100/tv.png" },
+                { name: "TNT Series", cat: "Filmes", url: "https://v1.rdse.lat/tntseries", icon: "https://img.icons8.com/color/100/tv.png" },
+                { name: "Universal Premiere", cat: "Filmes", url: "https://v1.rdse.lat/universalpremiere", icon: "https://img.icons8.com/color/100/video-camera.png" },
+                { name: "Universal Reality", cat: "Filmes", url: "https://v1.rdse.lat/universalreality", icon: "https://img.icons8.com/color/100/video-camera.png" },
+                { name: "Universal TV", cat: "Filmes", url: "https://v1.rdse.lat/universaltv", icon: "https://img.icons8.com/color/100/video-camera.png" },
+                { name: "Warner", cat: "Filmes", url: "https://v1.rdse.lat/warner", icon: "https://img.icons8.com/color/100/shield.png" },
+
+                // INFANTIS
+                { name: "Cartoonito", cat: "Infantis", url: "https://v1.rdse.lat/cartoonito", icon: "https://img.icons8.com/color/100/teddy-bear.png" },
+                { name: "Cartoon Network", cat: "Infantis", url: "https://v1.rdse.lat/cartoonnetwork", icon: "https://img.icons8.com/color/100/cartoon-network.png" },
+                { name: "Discover Kids", cat: "Infantis", url: "https://v1.rdse.lat/discoverykids", icon: "https://img.icons8.com/color/100/children.png" },
+                { name: "Dream Works", cat: "Infantis", url: "https://v1.rdse.lat/dreamworks", icon: "https://img.icons8.com/color/100/moon.png" },
+                { name: "DumDum", cat: "Infantis", url: "https://v1.rdse.lat/dumdum", icon: "https://img.icons8.com/color/100/lollipop.png" },
+                { name: "Dragon Ball Z 24h", cat: "Infantis", url: "https://v1.rdse.lat/24h-dragon-ball-z", icon: "https://img.icons8.com/color/100/dragon.png" },
+                { name: "Invencivel 24h", cat: "Infantis", url: "https://v1.rdse.lat/24h-invencivel", icon: "https://img.icons8.com/color/100/superhero.png" },
+                { name: "Naruto 24h", cat: "Infantis", url: "https://v1.rdse.lat/24h-naruto", icon: "https://img.icons8.com/color/100/ninja.png" },
+                { name: "Anime TV", cat: "Infantis", url: "https://v1.rdse.lat/animetv", icon: "https://img.icons8.com/color/100/anime.png" },
+                { name: "Chaves 24h", cat: "Infantis", url: "https://v1.rdse.lat/24h-chaves", icon: "https://img.icons8.com/color/100/barrel.png" },
+
+                // NOTICIAS
+                { name: "Band News", cat: "Noticias", url: "https://v1.rdse.lat/bandnews", icon: "https://img.icons8.com/color/100/news.png" },
+                { name: "Discover Ciencia", cat: "Noticias", url: "https://v1.rdse.lat/discoveryscience", icon: "https://img.icons8.com/color/100/atom.png" },
+
+                // ABERTOS
+                { name: "Band SP", cat: "Abertos", url: "https://v1.rdse.lat/bandsp", icon: "https://img.icons8.com/color/100/television.png" },
+                { name: "Discovery Channel", cat: "Abertos", url: "https://v1.rdse.lat/discoverychannel", icon: "https://img.icons8.com/color/100/compass.png" },
+                { name: "Discovery H&H", cat: "Abertos", url: "https://v1.rdse.lat/discoveryheh", icon: "https://img.icons8.com/color/100/heart-health.png" },
+                { name: "Globo RS", cat: "Abertos", url: "https://v1.rdse.lat/globors", icon: "https://img.icons8.com/color/100/globe.png" },
+                { name: "Record SP", cat: "Abertos", url: "https://v1.rdse.lat/recordsp", icon: "https://img.icons8.com/color/100/television.png" },
+                { name: "SBT SP", cat: "Abertos", url: "https://v1.rdse.lat/sbt", icon: "https://img.icons8.com/color/100/retro-tv.png" }
+            ],
+
+            filmes: [
+                { name: "Todo mundo em panico", id: "1273221" },
+                { name: "Red Aposentados e perigosos", id: "39514" },
+                { name: "Cara de um, Fochinho de outro", id: "1327819" },
+                { name: "O terminal", id: "594" },
+                { name: "Alerta Apocalipse", id: "696393" },
+                { name: "Mais um besteirol ao extremo", id: "15544" },
+                { name: "A pantera cor de rosa", id: "12096" },
+                { name: "Ela é o cara", id: "9655" },
+                { name: "Juntos pelo acaso", id: "38408" },
+                { name: "Bobeou dançou", id: "21724" },
+                { name: "Minha super ex namorada", id: "4474" },
+                { name: "O primeiro mentiroso", id: "23082" },
+                { name: "Speed Racer", id: "7459" },
+                { name: "Tudo por um furo", id: "109443" },
+                { name: "Recem-casados", id: "12090" },
+                { name: "Bem-vindo aos 40", id: "89492" },
+                { name: "Encontro de casais", id: "19899" },
+                { name: "Nerds, Bebidas e Curtição", id: "352186" },
+                { name: "Sex Tape: Perdido na nuvem", id: "225886" },
+                { name: "Arremessando alto", id: "705861" },
+                { name: "O Guarda-Costas 2", id: "20264" },
+                { name: "Uma comedia nada romantica", id: "10073" },
+                { name: "A ressaca 2", id: "243938" },
+                { name: "Red 2: aposentados e ainda mais perigosos", id: "146216" },
+                { name: "Dragões em dose dupla", id: "18764" },
+                { name: "Sombras da noite", id: "62213" },
+                { name: "O bom filho a casa torna", id: "13490" },
+                { name: "Anjos da lei", id: "64688" },
+                { name: "Anjos da lei 2", id: "187017" },
+                { name: "Sonic", id: "454626" },
+                { name: "Um dia fora de controle", id: "1248226" },
+                { name: "Frankinweenie", id: "62214" },
+                { name: "Dupla explosiva", id: "390043" },
+                { name: "18 anos e ainda virgem", id: "14912" },
+                { name: "Johnny english", id: "9486" },
+                { name: "Trem-Bala", id: "718930" }
+            ],
+
+            animes: [
+                { name: "Tomb Raider King", id: "297826" },
+                { name: "Blak torch", id: "285993" },
+                { name: "i became a legend after my 10 year-long last stand", id: "302051" },
+                { name: "Chansmoker cat", id: "312949" },
+                { name: "The frontier lord begins with zero subjects", id: "296437" },
+                { name: "The villager of level 999", id: "298994" },
+                { name: "Os Cavaleiros do zodiaco-saga do santuario", id: "216878" },
+                { name: "O grande Clerigo", id: "220779" },
+                { name: "Naruto Shippuden", id: "31910" },
+                { name: "Naruto", id: "46260" },
+                { name: "Yu-Gi-Oh!", id: "902" },
+                { name: "Yu-Gi-Oh! GX", id: "12536" }
+            ]
+        };
+
+        // INICIALIZAÇÃO DA PÁGINA E CONTROLE DE LOGIN
+        document.addEventListener("DOMContentLoaded", function() {
+            const username = localStorage.getItem("kaduflix_user") || "Usuário";
+            const userRole = localStorage.getItem("kaduflix_role") || "user";
+
+            document.getElementById("sessionUserName").innerText = username;
+            document.getElementById("sessionRole").innerText = userRole === "admin" ? "Admin" : "Comum";
+
+            if (userRole === "admin") {
+                const btnNovo = document.getElementById("btnNovoUsuario");
+                if (btnNovo) btnNovo.style.display = "inline-block";
+            }
+
+            renderGrid('canais', 'todos');
+        });
+
+        function switchMainTab(tab) {
+            currentTab = tab;
+            const buttons = document.querySelectorAll('.nav-actions .btn-tab');
+            buttons.forEach(b => b.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            renderGrid(tab, 'todos');
+        }
+
+        function renderGrid(tab, subCat) {
+            const grid = document.getElementById('contentGrid');
+            const catBar = document.getElementById('subCategoryBar');
+            grid.innerHTML = '';
+            catBar.innerHTML = '';
+
+            if (tab === 'canais') {
+                const categories = ['todos', 'Esporte', 'Filmes', 'Infantis', 'Noticias', 'Abertos'];
+                categories.forEach(c => {
+                    catBar.innerHTML += `<span class="cat-item ${c === subCat ? 'active' : ''}" onclick="renderGrid('canais', '${c}')">${c.toUpperCase()}</span>`;
+                });
+
+                catalog.canais.forEach(item => {
+                    if (subCat === 'todos' || item.cat === subCat) {
+                        grid.innerHTML += `
+                            <div class="item-card" onclick="playStream('${item.name}', '${item.url}')">
+                                <img src="${item.icon}" style="padding: 25px; object-fit: contain;">
+                                <div class="item-info">
+                                    <span class="item-title">${item.name}</span>
+                                    <span class="item-type">${item.cat.toUpperCase()}</span>
+                                </div>
+                            </div>`;
+                    }
+                });
+            } else {
+                const list = catalog[tab];
+                list.forEach(item => {
+                    const embedUrl = `https://superflixapi.beer/${tab === 'filmes' ? 'filme' : 'anime'}/${item.id}`;
+                    const posterUrl = `https://via.placeholder.com/300x450/1c1d22/ffffff?text=${encodeURIComponent(item.name)}`;
+                    
+                    grid.innerHTML += `
+                        <div class="item-card" onclick="playStream('${item.name}', '${embedUrl}')">
+                            <img src="${posterUrl}" alt="${item.name}">
+                            <div class="item-info">
+                                <span class="item-title">${item.name}</span>
+                                <span class="item-type">${tab.toUpperCase()}</span>
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+
+        function playStream(title, source) {
+            document.getElementById('playerTitle').innerText = title;
+            const container = document.getElementById('playerContainer');
+            document.getElementById('playerModal').classList.add('active');
+            container.innerHTML = `<iframe src="${source}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+        }
+
+        function closePlayerModal() {
+            document.getElementById('playerContainer').innerHTML = '';
+            document.getElementById('playerModal').classList.remove('active');
+        }
+
+        // CADASTRO DE NOVO USUÁRIO (FUNCIONALIDADE ADMIN)
+        function openCreateUserModal() { document.getElementById('createUserModal').classList.add('active'); }
+        function closeCreateUserModal() { 
+            document.getElementById('createUserModal').classList.remove('active');
+            document.getElementById('createUserForm').reset();
+        }
+
+        document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btnSaveUser = document.getElementById('btnSaveUser');
+            const usuario = document.getElementById('newUsername').value.trim();
+            const senha = document.getElementById('newPassword').value.trim();
+            const cargo = document.getElementById('newRole').value;
+            const dataCriacao = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+            btnSaveUser.innerText = "Salvando...";
+            btnSaveUser.disabled = true;
+
+            try {
+                // Utiliza a constante SHEETDB_URL declarada globalmente no auth-guard.js
+                const response = await fetch(SHEETDB_URL, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        data: [{ 'USUARIO': usuario, 'SENHA': senha, 'CARGO': cargo, 'DATA_DE_CRIACAO': dataCriacao }]
+                    })
+                });
+
+                if (response.ok) {
+                    alert(`Usuário "${usuario}" cadastrado com sucesso!`);
+                    closeCreateUserModal();
+                } else {
+                    alert("Erro ao cadastrar usuário.");
+                }
+            } catch (err) {
+                alert("Erro ao comunicar com a planilha.");
+            } finally {
+                btnSaveUser.innerText = "Cadastrar";
+                btnSaveUser.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -3,105 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entrar - KaduFLIX</title>
-    <link rel="shortcut icon" href="#">
+    <title>KaduFLIX - Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Autenticação preventiva -->
     <script src="auth-guard.js"></script>
+
     <style>
-        :root {
-            --bg-primary: #000000;
-            --bg-secondary: #16181c;
-            --border-color: #2f3336;
-            --primary: #E50914;
-            --primary-hover: #881D24;
-            --text-main: #e7e9ea;
-            --text-muted: #71767b;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Montserrat', sans-serif;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
         body {
-            background-color: var(--bg-primary);
-            color: var(--text-main);
+            background-color: #0b0c0e;
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
         }
-
         .login-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            background: #141519;
+            border: 1px solid #2a2b30;
             padding: 40px;
             border-radius: 12px;
             width: 100%;
             max-width: 400px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
-
         .brand-title {
-            color: var(--primary);
+            color: #E50914;
             font-size: 2.2rem;
             font-weight: 800;
             text-align: center;
             margin-bottom: 24px;
         }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .form-group input {
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #9aa0a6; }
+        input {
             width: 100%;
             padding: 12px;
             background: #000;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border: 1px solid #2a2b30;
             color: #fff;
-            font-size: 1rem;
+            border-radius: 6px;
             outline: none;
+            font-size: 1rem;
         }
-
-        .form-group input:focus {
-            border-color: var(--primary);
-        }
-
+        input:focus { border-color: #E50914; }
         .btn-submit {
             width: 100%;
             padding: 12px;
-            background: var(--primary);
-            color: #fff;
+            background: #E50914;
             border: none;
-            border-radius: 6px;
+            color: #fff;
             font-weight: 700;
             font-size: 1rem;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 10px;
+            transition: opacity 0.2s;
         }
-
-        .btn-submit:hover {
-            background: var(--primary-hover);
-        }
-
-        .error-message {
-            color: #ff4d4d;
+        .btn-submit:hover { opacity: 0.9; }
+        .btn-submit:disabled { background: #555; cursor: not-allowed; }
+        .error-msg {
+            color: #dc3545;
             font-size: 0.85rem;
-            margin-top: 12px;
+            margin-top: 15px;
             text-align: center;
             display: none;
         }
@@ -110,64 +76,73 @@
 <body>
 
     <div class="login-card">
-        <h1 class="brand-title">KADUFLIX</h1>
+        <div class="brand-title">KADUFLIX</div>
         <form id="loginForm">
             <div class="form-group">
-                <label for="usernameInput">Usuário</label>
-                <input type="text" id="usernameInput" required placeholder="Digite seu usuário">
+                <label for="username">Usuário</label>
+                <input type="text" id="username" placeholder="Digite seu usuário" required autocomplete="off">
             </div>
             <div class="form-group">
-                <label for="passwordInput">Senha</label>
-                <input type="password" id="passwordInput" required placeholder="Digite sua senha">
+                <label for="password">Senha</label>
+                <input type="password" id="password" placeholder="Digite sua senha" required>
             </div>
-            <button type="submit" class="btn-submit" id="btnSubmit">Entrar</button>
-            <div class="error-message" id="errorMsg">Usuário ou senha incorretos!</div>
+            <button type="submit" class="btn-submit" id="btnLogin">Entrar</button>
+            <div class="error-msg" id="errorMsg">Usuário ou senha incorretos!</div>
         </form>
     </div>
 
     <script>
+        const API_URL = "https://sheetdb.io/api/v1/hwd4ldwfwnxs9";
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const inputUser = document.getElementById('username').value.trim();
-    const inputPass = document.getElementById('password').value.trim();
-    const btnSubmit = document.querySelector('button[type="submit"]');
+            e.preventDefault();
 
-    btnSubmit.innerText = "Entrando...";
-    btnSubmit.disabled = true;
+            const inputUser = document.getElementById('username').value.trim();
+            const inputPass = document.getElementById('password').value.trim();
+            const btnLogin = document.getElementById('btnLogin');
+            const errorMsg = document.getElementById('errorMsg');
 
-    try {
-        // Busca os usuários cadastrados na API correta do SheetDB
-        const response = await fetch("https://sheetdb.io/api/v1/hwd4ldwfwnxs9");
-        if (!response.ok) throw new Error("Erro na requisição da API");
+            errorMsg.style.display = 'none';
+            btnLogin.innerText = "Verificando...";
+            btnLogin.disabled = true;
 
-        const data = await response.json();
+            try {
+                // Consulta a API do SheetDB
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error("Erro de conexão com o servidor");
+                }
 
-        // Procura pelo usuário ignorando diferença entre maiúsculas/minúsculas
-        const account = data.find(u => 
-            String(u.USUARIO).trim().toLowerCase() === inputUser.toLowerCase() && 
-            String(u.SENHA).trim() === inputPass
-        );
+                const users = await response.json();
 
-        if (account) {
-            // Salva os dados na sessão local
-            localStorage.setItem("kaduflix_user", account.USUARIO);
-            localStorage.setItem("kaduflix_role", (account.CARGO || "user").toLowerCase());
+                // Busca credenciais na lista
+                const account = users.find(u => {
+                    const dbUser = String(u.USUARIO || '').trim().toLowerCase();
+                    const dbPass = String(u.SENHA || '').trim();
+                    return dbUser === inputUser.toLowerCase() && dbPass === inputPass;
+                });
 
-            // Redireciona para o painel principal
-            window.location.href = "dashboard.html";
-        } else {
-            alert("Usuário ou senha incorretos!");
-        }
-    } catch (error) {
-        console.error("Erro no login:", error);
-        alert("Falha ao se conectar com a base de dados. Verifique sua conexão ou a API do SheetDB.");
-    } finally {
-        btnSubmit.innerText = "Entrar";
-        btnSubmit.disabled = false;
-    }
-});
+                if (account) {
+                    // Armazena a sessão
+                    localStorage.setItem("kaduflix_user", account.USUARIO);
+                    localStorage.setItem("kaduflix_role", String(account.CARGO || 'user').toLowerCase());
+
+                    // Redireciona para o Dashboard
+                    window.location.href = "dashboard.html";
+                } else {
+                    errorMsg.innerText = "Usuário ou senha incorretos!";
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error("Erro no login:", err);
+                errorMsg.innerText = "Falha ao conectar com o banco de dados.";
+                errorMsg.style.display = 'block';
+            } finally {
+                btnLogin.innerText = "Entrar";
+                btnLogin.disabled = false;
+            }
+        });
     </script>
 </body>
 </html>

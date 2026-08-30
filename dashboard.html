@@ -301,7 +301,15 @@
                 { name: "Yu-Gi-Oh! GX", id: "12536" }
             ]
         };
-
+    
+        function logout() {
+    // Limpa a sessão do localStorage
+    localStorage.removeItem("kaduflix_user");
+    localStorage.removeItem("kaduflix_role");
+    
+    // Redireciona para o login (index.html se você renomeou para o GitHub Pages)
+    window.location.href = "index.html";
+}
         // INICIALIZAÇÃO DA PÁGINA E CONTROLE DE LOGIN
         document.addEventListener("DOMContentLoaded", function() {
             const username = localStorage.getItem("kaduflix_user") || "Usuário";

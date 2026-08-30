@@ -72,7 +72,7 @@
             display: flex; flex-direction: column; justify-content: space-between; position: relative;
         }
         .item-card:hover { transform: translateY(-4px); border-color: var(--primary); }
-        .item-card img { width: 100%; height: 230px; object-fit: cover; background: #101114; }
+        .item-card img { width: 100%; height: 240px; object-fit: cover; background: #101114; }
         .item-info { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
         .item-title { font-weight: 700; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .item-type { color: var(--primary); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
@@ -218,10 +218,12 @@
     </div>
 
     <script>
+        const TMDB_API_KEY = "cd6eace2d822127d5833263288caa0a1";
+        const TMDB_IMG_BASE = "https://image.tmdb.org/t/p/w500";
+
         let currentTab = 'canais';
         let refreshUsersInterval = null;
 
-        // CATALOGO COMPLETO DE CONTEÚDO
         const catalog = {
             canais: [
                 { name: "Band Sports", cat: "Esporte", url: "https://v1.rdse.lat/bandsports", icon: "https://img.icons8.com/color/100/sports.png" },
@@ -353,7 +355,6 @@
             ]
         };
 
-        // INICIALIZAÇÃO E NAVEGAÇÃO
         document.addEventListener("DOMContentLoaded", function() {
             const username = localStorage.getItem("kaduflix_user") || "Usuário";
             const userRole = localStorage.getItem("kaduflix_role") || "user";
@@ -363,8 +364,8 @@
 
             if (userRole === "admin") {
                 document.getElementById("btnAdminTab").style.display = "inline-block";
-                fetchSheetDBUsers(); // Primeira consulta ao SheetDB
-                refreshUsersInterval = setInterval(fetchSheetDBUsers, 30000); // Polling a cada 30 segundos
+                fetchSheetDBUsers();
+                refreshUsersInterval = setInterval(fetchSheetDBUsers, 30000);
             }
 
             renderGrid('canais', 'todos');
@@ -393,7 +394,6 @@
             }
         }
 
-        // CARREGA E EXIBE OS USUÁRIOS DO SHEETDB
         async function fetchSheetDBUsers() {
             try {
                 const response = await fetch(SHEETDB_URL);
@@ -430,7 +430,6 @@
             }
         }
 
-        // DELETA UM USUÁRIO DA PLANILHA
         async function deleteUser(username) {
             if (!confirm(`Tem certeza que deseja excluir o usuário "${username}"?`)) return;
 
@@ -451,8 +450,22 @@
             }
         }
 
-        // CARREGA GRADE DE VÍDEOS / CANAIS
-        function renderGrid(tab, subCat) {
+        // BUSCA A CAPA OFICIAL NO TMDB
+        async function fetchTmdbPoster(tab, id, title) {
+            const type = tab === 'filmes' ? 'movie' : 'tv';
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&language=pt-BR`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.poster_path) return TMDB_IMG_BASE + data.poster_path;
+                }
+            } catch (e) {
+                console.error("Erro ao carregar TMDB:", e);
+            }
+            return `https://via.placeholder.com/300x450/1c1d22/ffffff?text=${encodeURIComponent(title)}`;
+        }
+
+        async function renderGrid(tab, subCat) {
             const grid = document.getElementById('contentGrid');
             const catBar = document.getElementById('subCategoryBar');
             grid.innerHTML = '';
@@ -478,19 +491,27 @@
                 });
             } else {
                 const list = catalog[tab];
-                list.forEach(item => {
+
+                // Renderiza primeiro com imagem temporária e busca as capas oficiais do TMDB
+                for (let item of list) {
                     const embedUrl = `https://superflixapi.beer/${tab === 'filmes' ? 'filme' : 'anime'}/${item.id}`;
-                    const posterUrl = `https://via.placeholder.com/300x450/1c1d22/ffffff?text=${encodeURIComponent(item.name)}`;
-                    
+                    const cardId = `card-img-${item.id}`;
+
                     grid.innerHTML += `
-                        <div class="item-card" onclick="playStream('${item.name}', '${embedUrl}')">
-                            <img src="${posterUrl}" alt="${item.name}">
+                        <div class="item-card" onclick="playStream('${item.name.replace(/'/g, "\\'")}', '${embedUrl}')">
+                            <img id="${cardId}" src="https://via.placeholder.com/300x450/1c1d22/ffffff?text=Carregando..." alt="${item.name}">
                             <div class="item-info">
                                 <span class="item-title">${item.name}</span>
                                 <span class="item-type">${tab.toUpperCase()}</span>
                             </div>
                         </div>`;
-                });
+
+                    // Carrega a imagem sem bloquear a renderização dos cards
+                    fetchTmdbPoster(tab, item.id, item.name).then(posterUrl => {
+                        const imgEl = document.getElementById(cardId);
+                        if (imgEl) imgEl.src = posterUrl;
+                    });
+                }
             }
         }
 

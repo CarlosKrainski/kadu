@@ -1,13 +1,13 @@
-// URL do SheetDB
-const SHEETDB_URL = "https://sheetdb.io/api/v1/hwd4ldwfnxs9";
+// URL oficial do SheetDB com a chave corrigida
+const SHEETDB_URL = "https://sheetdb.io/api/v1/hwd4ldwfwnxs9";
 
 const usuarioLogado = localStorage.getItem("kaduflix_user");
 const path = window.location.pathname;
 
-// Verifica se o caminho ATUAL é a página de login (trata caminhos como /kadu/, /kadu/index.html ou index.html)
+// Identifica se a página atual é a tela de login (index.html, login.html ou raiz /)
 const isLoginPage = path.endsWith("/") || path.endsWith("index.html") || path.endsWith("login.html");
 
-// 1. Se NÃO está logado e tenta acessar qualquer página que NÃO seja a de login -> Manda para o Login
+// 1. Se NÃO está logado e tenta acessar qualquer página protegida -> Manda para o Login
 if (!usuarioLogado && !isLoginPage) {
     window.location.href = "index.html";
 }
@@ -17,7 +17,7 @@ if (usuarioLogado && isLoginPage) {
     window.location.href = "dashboard.html";
 }
 
-// 3. Função Global de Logout (disponível para todos os botões "Sair")
+// 3. Função Global de Logout
 function logout() {
     localStorage.removeItem("kaduflix_user");
     localStorage.removeItem("kaduflix_role");

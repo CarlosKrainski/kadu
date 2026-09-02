@@ -137,6 +137,7 @@
             <span class="user-info">Olá, <strong id="sessionUserName">...</strong> (<span id="sessionRole">...</span>)</span>
             <button class="btn-tab active" onclick="switchMainTab('canais')">📺 Canais</button>
             <button class="btn-tab" onclick="switchMainTab('filmes')">🎬 Filmes</button>
+            <button class="btn-tab" onclick="switchMainTab('series')">📺 Séries</button>
             <button class="btn-tab" onclick="switchMainTab('animes')">🐉 Animes</button>
             <button id="btnAdminTab" class="btn-tab" style="display: none;" onclick="switchMainTab('admin')">⚙️ Painel Admin</button>
             <button class="btn btn-logout" onclick="logout()">Sair</button>
@@ -144,7 +145,7 @@
     </header>
 
     <div class="container">
-        <!-- PAINEL ADMINISTRATIVO (VISÍVEL APENAS PARA ADMINS) -->
+        <!-- PAINEL ADMINISTRATIVO -->
         <div id="adminPanel" class="admin-section">
             <div class="admin-header">
                 <h2>Gerenciamento de Usuários (SheetDB)</h2>
@@ -218,6 +219,7 @@
     </div>
 
     <script>
+        const SHEETDB_URL = "https://sheetdb.io/api/v1/hwd4ldwfwnxs9";
         const TMDB_API_KEY = "cd6eace2d822127d5833263288caa0a1";
         const TMDB_IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
@@ -337,7 +339,79 @@
                 { name: "Dupla explosiva", id: "390043" },
                 { name: "18 anos e ainda virgem", id: "14912" },
                 { name: "Johnny english", id: "9486" },
-                { name: "Trem-Bala", id: "718930" }
+                { name: "Trem-Bala", id: "718930" },
+                { name: "Top Gun - Ases Indomáveis", id: "744" },
+                { name: "Top Gun: Maverick", id: "361743" },
+                { name: "As Vantagens de Ser Invisível", id: "84892" },
+                { name: "Harry Potter e a Pedra Filosofal", id: "671" },
+                { name: "Harry Potter e a Câmara Secreta", id: "672" },
+                { name: "Harry Potter e o Prisioneiro de Azkaban", id: "673" },
+                { name: "Harry Potter e o Cálice de Fogo", id: "674" },
+                { name: "Harry Potter e a Ordem da Fênix", id: "675" },
+                { name: "Harry Potter e o Enigma do Príncipe", id: "767" },
+                { name: "Harry Potter e as Relíquias da Morte - Parte 1", id: "12444" },
+                { name: "Harry Potter e as Relíquias da Morte - Parte 2", id: "12445" },
+                { name: "Zoom: Academia de Super-Heróis", id: "14113" },
+                { name: "Loucademia de Polícia", id: "9336" },
+                { name: "Loucademia de Polícia 2: A Primeira Missão", id: "10157" },
+                { name: "Loucademia de Polícia 3: De Volta ao Treinamento", id: "12118" },
+                { name: "Loucademia de Polícia 4: O Cidadão se Defende", id: "10587" },
+                { name: "Loucademia de Polícia 5: Missão Miami Beach", id: "11825" },
+                { name: "Loucademia de Polícia 6: Cidade em Estado de Sítio", id: "11895" },
+                { name: "Loucademia de Polícia 7: Missão Moscou", id: "11546" },
+                { name: "Homem-Aranha: Um Novo Dia", id: "969681" },
+                { name: "Supergirl", id: "1081003" },
+                { name: "Encanto Quebrado", id: "1261635" },
+                { name: "A Odisseia", id: "1368337" },
+                { name: "Bruce Lee - O Dragão Chines", id: "77002" },
+                { name: "Heartstopper Para Sempre", id: "1468683" },
+                { name: "Dia D", id: "1275779" },
+                { name: "Os Aldeões", id: "549590" },
+                { name: "Star Wars: O Mandaloriano e Grogu", id: "1228710" },
+                { name: "Jack Ryan de Tom Clancy: Guerra Fantasma", id: "1380291" },
+                { name: "Primeiro as Damas", id: "1368881" },
+                { name: "A Grande Batalha", id: "535389" },
+                { name: "Devoradores de Estrelas", id: "687163" },
+                { name: "Mortal Kombat 2", id: "931285" },
+                { name: "Michael", id: "936075" },
+                { name: "O Lugar Onde Tudo Termina", id: "97367" },
+                { name: "Immortal Combat", id: "1656061" },
+                { name: "Todo Mundo Quase Morto", id: "747" },
+                { name: "A Volta dos Mortos Vivos", id: "10925" },
+                { name: "A Volta dos Mortos Vivos 2", id: "24929" },
+                { name: "Zumbilândia", id: "19908" },
+                { name: "Zumbilândia: Atire Duas Vezes", id: "338967" },
+                { name: "Coraline e o Mundo Secreto", id: "14836" },
+                { name: "Nefarious", id: "913673" },
+                { name: "Como Treinar o Seu Dragão", id: "10191" },
+                { name: "Como Treinar o seu Dragão 2", id: "82702" },
+                { name: "Como Treinar o Seu Dragão 3", id: "166428" },
+                { name: "Como Treinar o Seu Dragão: Volta ao Lar", id: "638507" },
+                { name: "Karatê Kid: A Hora da Verdade", id: "1885" },
+                { name: "Karatê Kid 2: A Hora da Verdade Continua", id: "8856" },
+                { name: "Karatê Kid 3: O Desafio Final", id: "10495" },
+                { name: "Karatê Kid 4: A Nova Aventura", id: "11231" },
+                { name: "Karate Kid", id: "38575" },
+                { name: "A Hora do Rush", id: "2109" },
+                { name: "A Hora do Rush 2", id: "5175" },
+                { name: "A Hora do Rush 3", id: "5174" },
+                { name: "O Reino Proibido", id: "1729" },
+                { name: "Sempre ao Seu Lado", id: "28178" },
+                { name: "Velozes e Furiosos", id: "9799" },
+                { name: "Velozes+ Furiosos+", id: "584" },
+                { name: "Velozes e Furiosos: Desafio em Tóquio", id: "9615" },
+                { name: "Velozes e Furiosos 4", id: "13804" },
+                { name: "Velozes & Furiosos 5: Operação Rio", id: "51497" },
+                { name: "Velozes & Furiosos 6", id: "82992" },
+                { name: "Velozes & Furiosos 7", id: "168259" },
+                { name: "Velozes & Furiosos 8", id: "337339" },
+                { name: "Velozes & Furiosos 9", id: "385128" },
+                { name: "Velozes & Furiosos 10", id: "385687" },
+                { name: "Velozes & Furiosos: Hobbs & Shaw", id: "384018" },
+                { name: "Carros", id: "920" },
+                { name: "Carros 2", id: "49013" },
+                { name: "Carros 3", id: "260514" },
+                { name: "Demon Slayer: Mugen Train - O Filme", id: "635302" }
             ],
             animes: [
                 { name: "Tomb Raider King", id: "297826" },
@@ -351,7 +425,51 @@
                 { name: "Naruto Shippuden", id: "31910" },
                 { name: "Naruto", id: "46260" },
                 { name: "Yu-Gi-Oh!", id: "902" },
-                { name: "Yu-Gi-Oh! GX", id: "12536" }
+                { name: "Yu-Gi-Oh! GX", id: "12536" },
+                { name: "My Hero Academia", id: "65930" },
+                { name: "Demon Slayer: Kimetsu no Yaiba Castelo Infinito", id: "1311031" },
+                { name: "Os Simpsons", id: "456" },
+                { name: "Uma Família da Pesada", id: "1434" },
+                { name: "Futurama", id: "615" },
+                { name: "Os Jovens Titãs", id: "604" },
+                { name: "Attack on Titan", id: "1429" },
+                { name: "Demon Slayer: Kimetsu no Yaiba", id: "85937" }
+            ],
+            series: [
+                { name: "Breakthrough: Bem-Vindo ao Futuro", id: "64220" },
+                { name: "Pearl Harbor: Minuto a Minuto", id: "139132" },
+                { name: "Sabores Extremos com Gordon Ramsay: Aventuras Extremas", id: "205239" },
+                { name: "Jogada de Risco", id: "299188" },
+                { name: "Meu Nome é Preta", id: "329383" },
+                { name: "Pompeia: Além do Tempo com Tom Hiddleston", id: "277640" },
+                { name: "Stuart Não Consegue Salvar o Universo", id: "287620" },
+                { name: "Lucky", id: "278624" },
+                { name: "Operação Guerra Verde", id: "319661" },
+                { name: "MasterChef EUA", id: "25992" },
+                { name: "Drunk History: A Historia Bebada", id: "230966" },
+                { name: "Mix Tape", id: "286056" },
+                { name: "La casa de papel: De Tóquio a Berlim", id: "132719" },
+                { name: "Noites de Corrida em Bowman Gray", id: "84162" },
+                { name: "Chefs Sob Pressão", id: "216575" },
+                { name: "Doenças Misteriosas", id: "274771" },
+                { name: "Os Mestres da Fritura", id: "125629" },
+                { name: "Mundo Mistério", id: "106173" },
+                { name: "Os Imortais do Brasil", id: "93557" },
+                { name: "SEC: Sábados de Futebol Americano Universitário", id: "296069" },
+                { name: "Os Segredos da Bíblia", id: "63019" },
+                { name: "Top Guns: The Next Generation", id: "237289" },
+                { name: "A Ascensão e a Queda dos Faraós", id: "297627" },
+                { name: "Carangas Absurdas", id: "138059" },
+                { name: "Operação FBI", id: "238699" },
+                { name: "Segredos Aéreos da Segunda Guerra Mundial", id: "212440" },
+                { name: "Operação Fronteira Brasil", id: "210661" },
+                { name: "Operação Fronteira: América do Sul", id: "111538" },
+                { name: "Bridgerton", id: "91239" },
+                { name: "Rainha Charlotte: Uma História Bridgerton", id: "196454" },
+                { name: "Harry Potter: O Campeonato das Casas de Hogwarts", id: "133723" },
+                { name: "Supernatural", id: "1622" },
+                { name: "O Clube das Winx", id: "1848" },
+                { name: "Fate: A Saga Winx", id: "97175" }
             ]
         };
 
@@ -480,7 +598,7 @@
                 catalog.canais.forEach(item => {
                     if (subCat === 'todos' || item.cat === subCat) {
                         grid.innerHTML += `
-                            <div class="item-card" onclick="playStream('${item.name}', '${item.url}')">
+                            <div class="item-card" onclick="playStream('${item.name.replace(/'/g, "\\'")}', '${item.url}')">
                                 <img src="${item.icon}" style="padding: 25px; object-fit: contain;">
                                 <div class="item-info">
                                     <span class="item-title">${item.name}</span>
@@ -490,11 +608,14 @@
                     }
                 });
             } else {
-                const list = catalog[tab];
+                const list = catalog[tab] || [];
 
-                // Renderiza primeiro com imagem temporária e busca as capas oficiais do TMDB
+                let embedType = 'filme';
+                if (tab === 'series') embedType = 'serie';
+                if (tab === 'animes') embedType = 'anime';
+
                 for (let item of list) {
-                    const embedUrl = `https://superflixapi.beer/${tab === 'filmes' ? 'filme' : 'anime'}/${item.id}`;
+                    const embedUrl = `https://superflixapi.beer/${embedType}/${item.id}`;
                     const cardId = `card-img-${item.id}`;
 
                     grid.innerHTML += `
@@ -506,7 +627,6 @@
                             </div>
                         </div>`;
 
-                    // Carrega a imagem sem bloquear a renderização dos cards
                     fetchTmdbPoster(tab, item.id, item.name).then(posterUrl => {
                         const imgEl = document.getElementById(cardId);
                         if (imgEl) imgEl.src = posterUrl;

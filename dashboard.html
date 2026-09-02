@@ -77,7 +77,6 @@
         .item-title { font-weight: 700; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .item-type { color: var(--primary); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 
-        /* PAINEL ADMINISTRATIVO */
         .admin-section {
             background: var(--bg-secondary); border: 1px solid var(--border-color);
             border-radius: 12px; padding: 24px; margin-bottom: 32px; display: none;
@@ -97,13 +96,10 @@
         th { background: #000; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
         tr:hover { background: var(--card-bg); }
 
-        .badge-role {
-            padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-        }
+        .badge-role { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .badge-admin { background: rgba(229, 9, 20, 0.2); color: var(--primary); border: 1px solid var(--primary); }
         .badge-user { background: rgba(40, 167, 69, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
 
-        /* MODAIS */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); display: none;
@@ -135,17 +131,16 @@
         <div class="brand-title">KADUFLIX</div>
         <div class="nav-actions">
             <span class="user-info">Olá, <strong id="sessionUserName">...</strong> (<span id="sessionRole">...</span>)</span>
-            <button class="btn-tab active" onclick="switchMainTab('canais')">📺 Canais</button>
-            <button class="btn-tab" onclick="switchMainTab('filmes')">🎬 Filmes</button>
-            <button class="btn-tab" onclick="switchMainTab('series')">📺 Séries</button>
-            <button class="btn-tab" onclick="switchMainTab('animes')">🐉 Animes</button>
-            <button id="btnAdminTab" class="btn-tab" style="display: none;" onclick="switchMainTab('admin')">⚙️ Painel Admin</button>
+            <button class="btn-tab active" onclick="switchMainTab('canais', this)">📺 Canais</button>
+            <button class="btn-tab" onclick="switchMainTab('filmes', this)">🎬 Filmes</button>
+            <button class="btn-tab" onclick="switchMainTab('series', this)">📺 Séries</button>
+            <button class="btn-tab" onclick="switchMainTab('animes', this)">🐉 Animes</button>
+            <button id="btnAdminTab" class="btn-tab" style="display: none;" onclick="switchMainTab('admin', this)">⚙️ Painel Admin</button>
             <button class="btn btn-logout" onclick="logout()">Sair</button>
         </div>
     </header>
 
     <div class="container">
-        <!-- PAINEL ADMINISTRATIVO -->
         <div id="adminPanel" class="admin-section">
             <div class="admin-header">
                 <h2>Gerenciamento de Usuários (SheetDB)</h2>
@@ -188,7 +183,6 @@
         <div class="grid-cards" id="contentGrid"></div>
     </div>
 
-    <!-- MODAL DO PLAYER DE VÍDEO -->
     <div class="modal-overlay" id="playerModal">
         <div class="player-modal">
             <div class="player-header">
@@ -199,7 +193,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE CRIAR USUÁRIO -->
     <div class="modal-overlay" id="createUserModal">
         <div class="modal-card">
             <h3 style="margin-bottom: 16px;">Cadastrar Novo Usuário</h3>
@@ -219,6 +212,7 @@
     </div>
 
     <script>
+        // HTTPS GARANTIDO PARA EVITAR BLOQUEIO EM DEPLOY
         const SHEETDB_URL = "https://sheetdb.io/api/v1/hwd4ldwfwnxs9";
         const TMDB_API_KEY = "cd6eace2d822127d5833263288caa0a1";
         const TMDB_IMG_BASE = "https://image.tmdb.org/t/p/w500";
@@ -489,11 +483,11 @@
             renderGrid('canais', 'todos');
         });
 
-        function switchMainTab(tab) {
+        function switchMainTab(tab, btnEl) {
             currentTab = tab;
             const buttons = document.querySelectorAll('.nav-actions .btn-tab');
             buttons.forEach(b => b.classList.remove('active'));
-            if (event && event.target) event.target.classList.add('active');
+            if (btnEl) btnEl.classList.add('active');
 
             const adminPanel = document.getElementById('adminPanel');
             const subCategoryBar = document.getElementById('subCategoryBar');
@@ -568,7 +562,6 @@
             }
         }
 
-        // BUSCA A CAPA OFICIAL NO TMDB
         async function fetchTmdbPoster(tab, id, title) {
             const type = tab === 'filmes' ? 'movie' : 'tv';
             try {
